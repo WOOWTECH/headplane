@@ -1,5 +1,9 @@
 # Next
 
+## Fixes
+
+- Fixed the ACL page returning an HTTP 500 on a fresh visit while its editor still appeared after loading. The editor and change preview now start after the browser mounts.
+
 # 0.7.1 (August 27, 2026)
 
 ## Changes

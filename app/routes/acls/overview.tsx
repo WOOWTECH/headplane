@@ -28,10 +28,15 @@ export const loader = aclLoader;
 export const action = aclAction;
 
 export default function Page({ loaderData: { access, writable, policy } }: Route.ComponentProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [codePolicy, setCodePolicy] = useState(policy);
   const fetcher = useFetcher<typeof action>();
   const { revalidate } = useRevalidator();
   const disabled = !access || !writable; // Disable if no permission or not writable
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     // Update the codePolicy when the loader data changes
@@ -109,12 +114,16 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
         </TabsList>
         <TabsPanel value="edit">
           <Suspense fallback={<Fallback />}>
-            <LazyEditor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
+            {isMounted ? (
+              <LazyEditor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
+            ) : (
+              <Fallback />
+            )}
           </Suspense>
         </TabsPanel>
         <TabsPanel value="diff">
           <Suspense fallback={<Fallback />}>
-            <LazyDiffer left={policy} right={codePolicy} />
+            {isMounted ? <LazyDiffer left={policy} right={codePolicy} /> : <Fallback />}
           </Suspense>
         </TabsPanel>
         <TabsPanel value="preview">
