@@ -1,0 +1,53 @@
+name: WoowTech QA image
+
+on:
+  push:
+    branches:
+      - fix/headplane-acl-ssr-071-20261013
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: woowtech-qa-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:unit
+      - run: pnpm typecheck
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: final
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/woowtech/headplane:0.7.1-acl-ssr-qa-20261013
+          labels: |
+            org.opencontainers.image.source=https://github.com/WOOWTECH/headplane
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=0.7.1-acl-ssr-qa-20261013
+          build-args: |
+            IMAGE_TAG=ghcr.io/woowtech/headplane:0.7.1-acl-ssr-qa-20261013
+            HEADPLANE_VERSION=0.7.1-acl-ssr-qa-20261013
