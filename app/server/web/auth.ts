@@ -109,6 +109,23 @@ export function isUserPrincipal(principal: Principal): principal is UserPrincipa
   return principal.kind === "oidc" || principal.kind === "proxy";
 }
 
+/**
+ * Whether the home page should ask the signed-in user to pick their Headscale user.
+ *
+ * The picker exists to match an SSO identity to a Headscale user. Behind an auth
+ * proxy (for example a platform entrance that sends one constant identity for
+ * whoever passed its own login) there is no SSO identity to match, and an admin who
+ * can use the UI manages every user and machine without being one of them. Those
+ * sessions skip the picker; linking stays available from the Users page.
+ */
+export function shouldPromptHeadscaleLink(principal: Principal, canUseUi: boolean): boolean {
+  if (!isUserPrincipal(principal) || principal.user.headscaleUserId) {
+    return false;
+  }
+
+  return !(principal.kind === "proxy" && canUseUi);
+}
+
 interface CidrRange {
   family: 4 | 6;
   base: bigint;

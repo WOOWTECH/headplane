@@ -3,7 +3,7 @@ name: WoowTech QA image
 on:
   push:
     branches:
-      - fix/headplane-acl-ssr-071-20261013
+      - fix/headplane-proxy-link-dns-records-20261104
   workflow_dispatch:
 
 permissions:
@@ -43,11 +43,11 @@ jobs:
           target: final
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/woowtech/headplane:0.7.1-acl-ssr-qa-20261013
+          tags: ghcr.io/woowtech/headplane:0.7.1-woow-20261104
           labels: |
             org.opencontainers.image.source=https://github.com/WOOWTECH/headplane
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=0.7.1-acl-ssr-qa-20261013
+            org.opencontainers.image.version=0.7.1-woow-20261104
           build-args: |
-            IMAGE_TAG=ghcr.io/woowtech/headplane:0.7.1-acl-ssr-qa-20261013
-            HEADPLANE_VERSION=0.7.1-acl-ssr-qa-20261013
+            IMAGE_TAG=ghcr.io/woowtech/headplane:0.7.1-woow-20261104
+            HEADPLANE_VERSION=0.7.1-woow-20261104

@@ -23,14 +23,20 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
     return data({ success: false }, 403);
   }
 
-  if (!headscaleConfig.writable()) {
-    return data({ success: false }, 403);
-  }
-
   const formData = await request.formData();
   const action = formData.get("action_id")?.toString();
   if (!action) {
     return data({ success: false }, 400);
+  }
+
+  // DNS records may live in a separate, writable file even when the main
+  // Headscale config is read-only, so record changes check that file instead.
+  const isRecordAction = action === "add_record" || action === "remove_record";
+  const canWrite = isRecordAction
+    ? headscaleConfig.dnsRecordsWritable()
+    : headscaleConfig.writable();
+  if (!canWrite) {
+    return data({ success: false }, 403);
   }
 
   switch (action) {

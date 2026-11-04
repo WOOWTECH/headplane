@@ -41,6 +41,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ...dns,
     access: writablePermission,
     writable: headscaleConfig.writable(),
+    recordsWritable: headscaleConfig.dnsRecordsWritable(),
   };
 }
 
@@ -58,12 +59,16 @@ export default function Page() {
 
   allNs.global = data.nameservers;
   const isDisabled = data.access === false || data.writable === false;
+  // Records can stay editable when they live in their own writable file.
+  const recordsDisabled = data.access === false || data.recordsWritable === false;
 
   return (
     <div className="flex max-w-(--breakpoint-lg) flex-col gap-16">
       {data.writable ? undefined : (
         <Notice>
-          The Headscale configuration is read-only. You cannot make changes to the configuration
+          {data.recordsWritable
+            ? "The Headscale configuration is read-only. Only DNS records can be changed here."
+            : "The Headscale configuration is read-only. You cannot make changes to the configuration"}
         </Notice>
       )}
       {data.access ? undefined : (
@@ -73,7 +78,7 @@ export default function Page() {
       )}
       <RenameTailnet isDisabled={isDisabled} name={data.baseDomain} />
       <ManageNS isDisabled={isDisabled} nameservers={allNs} overrideLocalDns={data.overrideDns} />
-      <ManageRecords isDisabled={isDisabled} records={data.extraRecords} />
+      <ManageRecords isDisabled={recordsDisabled} records={data.extraRecords} />
       <ManageDomains
         isDisabled={isDisabled}
         magic={data.magicDns ? data.baseDomain : undefined}

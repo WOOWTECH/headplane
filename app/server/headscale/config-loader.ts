@@ -144,6 +144,12 @@ interface HeadscaleConfig {
   getOIDCConfig: () => OIDCConfigView | undefined;
   hasOIDCConfig: () => boolean;
   dnsRecords: () => DNSRecord[];
+  /**
+   * Whether DNS extra records can be changed. With `dns.extra_records_path` the
+   * records live in their own JSON file, which may be writable even when the
+   * main Headscale config is read-only (e.g. a ConfigMap managed by Helm).
+   */
+  dnsRecordsWritable: () => boolean;
   patch: (patches: PatchConfig[]) => Promise<void>;
   addDNS: (record: DNSRecord) => Promise<boolean | void>;
   removeDNS: (record: DNSRecord) => Promise<boolean | void>;
@@ -172,6 +178,7 @@ function createHeadscaleConfig(
     getOIDCConfig: () => getOIDCConfig(state),
     hasOIDCConfig: () => hasOIDCConfig(state),
     dnsRecords: () => dnsRecords(state),
+    dnsRecordsWritable: () => dnsRecordsWritable(state),
     patch: (patches) => patchHeadscaleConfig(state, patches),
     addDNS: (record) => addDNS(state, record),
     removeDNS: (record) => removeDNS(state, record),
@@ -220,6 +227,15 @@ function getOIDCConfig(config: HeadscaleConfigState): OIDCConfigView | undefined
 
 function hasOIDCConfig(config: HeadscaleConfigState) {
   return getOIDCConfig(config) !== undefined;
+}
+
+function dnsRecordsWritable(config: HeadscaleConfigState) {
+  if (config.dns) {
+    return config.dns.readable() && config.dns.writable();
+  }
+
+  // Records are inline in the main config, so they follow its access.
+  return readable(config) && writable(config);
 }
 
 function dnsRecords(config: HeadscaleConfigState) {

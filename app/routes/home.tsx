@@ -17,7 +17,7 @@ import {
   requestApiContext,
 } from "~/server/context";
 import { usersResource } from "~/server/headscale/live-store";
-import { isUserPrincipal } from "~/server/web/auth";
+import { isUserPrincipal, shouldPromptHeadscaleLink } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import { getUserDisplayName } from "~/utils/user";
@@ -34,8 +34,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   // If the signed-in Headplane user has no linked Headscale user,
   // check for unclaimed users they can pick from before anything else.
+  // Admins behind an auth proxy skip this (see shouldPromptHeadscaleLink).
   let unlinked = false;
-  if (isUserPrincipal(principal) && !principal.user.headscaleUserId) {
+  if (
+    isUserPrincipal(principal) &&
+    shouldPromptHeadscaleLink(principal, auth.can(principal, Capabilities.ui_access))
+  ) {
     const { api } = await getRequestApi(request);
 
     let headscaleUsers: { id: string; name: string }[] = [];
